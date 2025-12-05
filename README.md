@@ -1,5 +1,7 @@
 # HMG-Net：一种面向二手物品融合多模态折旧建模的分层交互商品价值预估网络
 
+## 背景
+58作为较早从事二手市场的平台，通过互联网技术让社会闲置物品流动起来，给买卖双方创造新的价值。在二手交易中，二手物品价格是重要影响因素，但是因为个人信息有限，二手物品信息发布中，价格填写用户主观判断因素较多，可能造成两个问题，一是不合理的价格导致交易缓慢，二是用户发布二手物品售卖信息效率偏低，综上考虑在用户发布二手物品时通过模型做价格预估，给用户做参考出价，提升用户发布效率，改善整个二手交易生态
 
 ## 📖 核心架构图解 (Conceptual Architecture)
 
@@ -50,7 +52,7 @@ $$
 
 * **视觉侧：** 利用 DINO v3 结合 ViT 提取Object Proposals，构建**视觉场景图 (Visual Scene Graph)**。节点是物体，边是相对位置。DINO v3作为先进的Transformer-based检测器，提供更准确和高效的对象检测，使图节点更具语义丰富性，并通过去噪锚框机制捕捉细粒度关系。
 * **文本侧：** 利用 Dependency Parsing 结合 miniLM 构建**文本语义树**。miniLM提供更先进的句子级嵌入，提高句法树的语义准确性，并支持上下文-aware的解析。
-* **融合：** 使用 **Graph Matching Network (GMN)** 计算结构一致性，进行 Consistency Check。为了增加创新深度，我们引入多层图注意力融合（Graph Attention Fusion），允许跨模态图节点动态交互，并融入Gated Fusion机制以平衡模态贡献：
+* **融合：** 使用 **Graph Matching Network (GMN)** 计算结构一致性，进行 Consistency Check，引入多层图注意力融合（Graph Attention Fusion），允许跨模态图节点动态交互，并融入Gated Fusion机制以平衡模态贡献：
 
 $$
 S_{match} = \text{GMN}(G_{visual}, G_{text}) + \text{GAT}(E_{visual}, E_{text})
@@ -121,23 +123,3 @@ $$
 ---
 
 ## 📚 Citation
-
-If you use this code or ideas, please cite:
-
-```bibtex
-@article{HMGNet202X,
-  title={HMG-Net: A Hierarchical Multi-Granularity Interaction Network with Market-Guided Depreciation Modeling},
-  author={Your Name},
-  journal={arXiv preprint},
-  year={202X}
-}
-```
-
-### Related Works
-- Radford, A., et al. (2021). "Learning Transferable Visual Models From Natural Language Supervision." ICML.
-- Kipf, T. N., & Welling, M. (2017). "Semi-Supervised Classification with Graph Convolutional Networks." ICLR.
-- Li, W., et al. (2022). "Multimodal Data Guided Spatial Feature Fusion." CVPR.
-- Zhang, Y., et al. (2023). "Multimodal AI Framework for High-Potential Product Listings." NeurIPS.
-- Wang, Z., et al. (2024). "IPL: Leveraging Multimodal Large Language Models for Intelligent Product Listing." ACL.
-- Chen, X., et al. (2023). "Zero-Shot Retrieval for Scalable Visual Search." ECCV.
-- Liu, J., et al. (2022). "Cross-Platform E-Commerce Product Categorization." WWW Conference.
