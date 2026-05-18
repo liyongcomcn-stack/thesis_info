@@ -121,29 +121,68 @@
 
 ## 七、研究方法
 
-### （一）多模态表示学习方法
+为增强本文的统计学研究特征，本文在方法设计上不仅关注模型构建，还强调变量定义、参数估计、统计推断与因果识别。整体上，研究方法由离线预测建模方法与在线随机实验评估方法两部分组成。
 
-采用视觉编码器与文本编码器分别提取商品图片和标题文本特征，并通过特征拼接、交互注意力或统一表示学习等方式实现多模态融合，用于一级类目与二级类目识别任务。
+### （一）多模态二级类目识别方法
 
-### （二）类目约束属性抽取方法
+本文以商品图片与标题文本为联合输入，构建多模态类目识别模型，输出一级类目与二级类目预测结果。考虑到平台当前一级类目共 11 个、二级类目约 150 个，二级类目识别具有明显的细粒度分类特征，因此在建模过程中需要兼顾类间差异与类内相似性。
 
-在模型设计中引入类目先验信息，为不同类目构建差异化属性模板，并区分枚举属性与开放属性两类字段。对于枚举属性，可建模为分类或多标签分类任务；对于开放属性，可结合抽取式或生成式方法进行识别，从而提升整体结构化能力。
+在统计建模层面，类目识别任务可视为多分类预测问题。本文将以单模态图像模型、单模态文本模型作为基线方法，以多模态融合模型作为核心方法，通过比较不同方法在一级类目与二级类目层面的分类准确率、宏平均 F1 值和长尾类目表现，分析多模态信息对细粒度类目识别的增益效果。
+
+### （二）类目约束的属性抽取方法
+
+本文将属性抽取任务置于类目条件之下建模，即先利用类目识别结果限定候选属性空间，再在不同类目的属性模板内进行字段识别。该设定符合真实业务逻辑，因为平台中不同二级类目对应不同属性体系，且属性值类型同时包含枚举属性与开放属性两类。
+
+例如，在儿童衣服、玩具等类目中，必填属性仅包括“物品成色”这一字段，其取值包括“新品”“已拆包装”“成色完美”“成色良好”“物品可用”等五种状态；而在二手手机类目中，必填属性至少包括“手机品牌”和“物品成色”两个字段，其中手机品牌为类目相关属性，物品成色为跨类目共性属性。基于此，本文将按类目建立差异化属性模板，并将枚举属性抽取建模为分类问题，将开放属性抽取建模为抽取式或生成式识别问题。
+
+在统计评价层面，本文将分别从字段级准确率、样本级准确率和必填属性完成率等维度评估属性抽取质量，并分析类目约束机制是否能够显著提升属性抽取的准确性与结构一致性。
 
 ### （三）价格区间建议方法
 
-针对仅能获取用户挂牌价且价格噪声较大的特点，采用分位数回归、区间预测或鲁棒回归等方法构建价格区间建议模型。必要时对挂牌价进行异常值处理、截尾、分桶或标准化，以降低极端值对建模结果的影响。
+由于当前平台可直接获得的价格标签主要为用户挂牌价，且挂牌价同时受到商品客观价值、卖方心理预期和议价策略等因素影响，存在较强噪声，因此本文不将价格任务定义为真实成交价格预测，而将其定义为参考价格区间建议。
 
-### （四）历史样本辅助方法
+在建模方法上，本文拟采用分位数回归、区间预测或鲁棒回归方法，以商品图文特征、结构化属性信息及历史相似样本信息作为解释变量，对价格分布的不同分位点进行建模。必要时，将对挂牌价进行异常值清洗、截尾、分桶、对数变换或类目内标准化处理，并通过敏感性分析比较不同价格处理方案对模型结果的影响。
 
-利用历史商品图文和结构化信息构建相似商品检索或相似样本辅助机制，为价格区间建议提供更稳定的参考信息，并分析引入历史样本后对价格建议效果的提升情况。
+在统计评价层面，本文将重点关注区间覆盖率、区间宽度、Pinball Loss、校准性以及不同类目下的稳健性表现，以增强价格建议结果的业务可用性与统计解释性。
 
-### （五）统计推断方法
+### （四）离线统计评估方法
 
-在离线实验部分，采用 Bootstrap 方法估计指标置信区间，并结合与任务类型相匹配的显著性检验方法比较不同模型方案之间的差异，以增强研究结论的统计稳健性。
+在离线实验部分，本文将构建统一的统计评价体系，对不同模型方案进行系统比较。针对分类任务，将采用 Accuracy、Macro-F1、Weighted-F1 等指标；针对属性抽取任务，将采用字段级准确率、样本级准确率、必填属性完成率等指标；针对价格区间建议任务，将采用区间覆盖率、Pinball Loss、区间平均宽度等指标。
 
-### （六）用户级随机实验与因果评估方法
+在统计推断层面，本文拟采用 Bootstrap 重采样方法估计主要评价指标的置信区间，并结合与任务指标类型相适配的显著性检验方法，对模型间效果差异进行统计检验。对于不同一级类目、不同二级类目、核心类目与长尾类目之间的表现差异，本文还将开展分层误差分析与稳健性分析，以评估模型在复杂业务场景中的泛化能力。
 
-在线上阶段，采用用户级随机对照实验估计 AI 辅助发布方案的平均处理效应。主分析口径采用 ITT，以避免因用户实际使用深度差异导致的选择偏差；在条件允许时，可进一步结合实际使用深度进行补充分析，以刻画产品效果的作用机制。
+### （五）用户级随机实验设计方法
+
+在在线评估阶段，本文采用用户级随机对照实验设计。具体而言，以用户为随机化单位，将进入发布流程的用户随机分配至实验组和对照组，并保证同一用户在实验期间始终处于同一组别，以降低跨组污染和重复暴露带来的偏差。
+
+实验组用户在发布过程中可获得 AI 辅助发布能力，包括类目推荐、属性补全、价格区间建议和描述生成等辅助功能；对照组用户则沿用原有发布流程。该设计的核心目标是识别“是否被分配到 AI 辅助发布能力”对结果变量的平均影响。
+
+从因果识别角度看，本文将随机分组变量视为处理变量，以意向处理效应（Intent-to-Treat, ITT）作为主分析口径。由于实验组用户对 AI 辅助能力的实际使用深度可能存在差异，若直接按使用情况分组分析，可能引入自选择偏差，因此本文优先报告 ITT 结果；在条件允许的情况下，可进一步基于实际使用深度开展补充性机制分析。
+
+### （六）实验假设与统计检验方法
+
+为增强研究设计的统计学规范性，本文在在线实验中将围绕以下核心假设展开检验：
+
+1. 与对照组相比，实验组的发布完成率显著提升；
+2. 与对照组相比，实验组的发布时间显著缩短；
+3. 与对照组相比，实验组的必填属性完成率显著提升；
+4. 与对照组相比，实验组商品曝光后的 CTR 显著提升；
+5. 与对照组相比，实验组商品的连接率显著提升。
+
+在估计方法上，对于比例类结果变量，如发布完成率、必填属性完成率、CTR 和连接率，本文可采用均值差异估计、比例差异检验以及线性概率模型或 Logistic 回归模型进行估计与显著性检验；对于连续型结果变量，如发布时间，本文可采用均值比较、稳健标准误线性回归，必要时对偏态分布变量进行对数变换后再开展回归分析。
+
+此外，为提高估计精度，本文可在随机实验的基础上进一步引入实验前协变量进行回归调整，如用户历史发布行为、类目类型、商品基础特征等，但随机化分配仍然是识别因果效应的核心依据。
+
+### （七）异质性分析与稳健性分析方法
+
+考虑到 AI 辅助发布能力在不同用户群体和不同商品类型中的作用可能存在差异，本文拟对新用户与老用户、核心类目与长尾类目分别开展异质性分析，考察平均处理效应在不同子样本中的变化。
+
+同时，本文还将通过以下方式开展稳健性分析：
+
+1. 比较不同价格处理方案下价格区间建议模型的结果稳定性；
+2. 比较不同实验观测窗口下 CTR 与连接率结果的一致性；
+3. 比较是否加入协变量调整前后实验结果的一致性；
+4. 在必要时对异常样本和极端值样本进行剔除后重复估计，以检验结论稳健性。
 
 ## 八、变量定义与指标设计
 
@@ -162,11 +201,21 @@
 
 1. **发布完成率**：用户进入发布页后最终提交成功的比例；
 2. **发布时间**：用户从进入发布页到提交成功的总时长；
-3. **必填属性完成率**：发布流程中必填属性被填完的比例；
+3. **必填属性完成率**：发布流程中必填属性被填完的比例。由于业务上只有必填属性填完后商品才可提交，因此该指标既可用于衡量 AI 辅助补全效果，也可反映发布流程阻塞程度；
 4. **商品 CTR**：商品发布并获得曝光后，其点击次数与曝光次数之比；
 5. **连接率**：对商品发生私信、电话、留言、收藏中的任意一种行为，记为一次连接行为；将连接行为对应的用户去重后得到连接 UV，再以连接 UV 除以曝光 UV 计算连接率。
 
-### （四）异质性分析维度
+### （四）指标分层说明
+
+为增强统计分析的可解释性，本文将根据指标性质区分为三类：
+
+1. **发布效率指标**：发布完成率、发布时间；
+2. **内容质量指标**：必填属性完成率；
+3. **发布后效果指标**：CTR、连接率。
+
+这种指标分层有助于从“是否更容易发出商品”“发布内容是否更完整”“发布后是否获得更好反馈”三个层面评价 AI 辅助发布能力。
+
+### （五）异质性分析维度
 
 结合业务场景，本文拟从以下维度开展异质性分析：
 
@@ -344,13 +393,74 @@
 
 虽然本文的主要研究框架已经明确，但以下事项建议在正式送审前进一步细化，以便后续实证分析口径完全统一：
 
-1. 一级类目与二级类目的最终标签数量及其层级映射关系；
-2. 不同二级类目下必填属性与非必填属性的最终字段清单；
+1. 一级类目 11 个与二级类目约 150 个的最终标签清单及其层级映射关系；
+2. 不同二级类目下必填属性与非必填属性的最终字段清单，并补充若干代表性类目示例；
 3. 用户挂牌价的具体清洗方案，包括是否进行极端值截尾、对数变换、类目内标准化或分桶处理；
-4. 线上实验的目标样本量、实验周期和最小可检测效应的设定；
-5. 连接行为中“收藏”是否与私信、电话、留言等高意图行为分开报告补充指标；
+4. 线上实验的目标样本量、实验周期和最小可检测效应设定；
+5. 连接行为中“收藏”是否作为较弱意图行为单独报告补充指标；
 6. 是否在主分析之外补充新老用户、核心类目与长尾类目的分层实验结果。
 
 ## 十四、主要参考文献
 
-正式送审稿中应根据学校格式要求补充并统一排版。参考文献建议主要覆盖以下几类：多模态商品理解、商品属性抽取、视觉语言模型、大语言模型在信息抽取中的应用、价格预测与区间建模、随机对照实验与因果推断等方向的代表性文献。后续撰写时应优先选取近年高质量期刊论文、会议论文及经典方法文献，并统一为学校指定参考文献格式。
+[1] Cevahir A, Murakami K. Large-scale Multi-class and Hierarchical Product Categorization for an E-commerce Giant[C]//Proceedings of COLING 2016, the 26th International Conference on Computational Linguistics: Technical Papers. Osaka, Japan: The COLING 2016 Organizing Committee, 2016: 525-535.
+
+[2] Tan L, Li M Y, Kok S. E-Commerce Product Categorization via Machine Translation[J]. ACM Transactions on Management Information Systems, 2020, 11(3): Article 11.
+
+[3] Devlin J, Chang M W, Lee K, et al. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding[C]//Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies. Minneapolis, Minnesota: Association for Computational Linguistics, 2019: 4171-4186.
+
+[4] Dosovitskiy A, Beyer L, Kolesnikov A, et al. An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale[C]//International Conference on Learning Representations. 2021.
+
+[5] Radford A, Kim J W, Hallacy C, et al. Learning Transferable Visual Models From Natural Language Supervision[C]//Proceedings of the 38th International Conference on Machine Learning. Proceedings of Machine Learning Research, 2021, 139: 8748-8763.
+
+[6] Li J, Li D, Xiong C, et al. BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation[C]//Proceedings of the 39th International Conference on Machine Learning. Proceedings of Machine Learning Research, 2022, 162: 12888-12900.
+
+[7] Li J, Li D, Savarese S, et al. BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models[C]//Proceedings of the 40th International Conference on Machine Learning. Proceedings of Machine Learning Research, 2023, 202: 19730-19742.
+
+[8] Dai W, Li J, Li D, et al. InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning[C]//Advances in Neural Information Processing Systems. 2023.
+
+[9] Zhu T, Wang Y, Li H, et al. Multimodal Joint Attribute Prediction and Value Extraction for E-commerce Product[C]//Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing. Online: Association for Computational Linguistics, 2020: 2129-2139.
+
+[10] De la Comble A, Salles M A V, Boughorbel S, et al. Multi-Modal Attribute Extraction for E-Commerce[EB/OL]. arXiv:2203.03441, 2022.
+
+[11] Khandelwal A, Mittal H, Kulkarni S S, et al. Large Scale Generative Multimodal Attribute Extraction for E-commerce Attributes[C]//Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 5: Industry Track). Toronto, Canada: Association for Computational Linguistics, 2023: 305-312.
+
+[12] Li Y, Xue B, Zhang R, et al. AtTGen: Attribute Tree Generation for Real-World Attribute Joint Extraction[C]//Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). Toronto, Canada: Association for Computational Linguistics, 2023: 2139-2152.
+
+[13] Gong J, Eldardiry H. Multi-Label Zero-Shot Product Attribute-Value Extraction[EB/OL]. arXiv:2402.08802, 2024.
+
+[14] Gong J, Cheng M, Shen H, et al. Visual Zero-Shot E-Commerce Product Attribute Value Extraction[C]//Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 3: Industry Track). Albuquerque, New Mexico: Association for Computational Linguistics, 2025: 460-469.
+
+[15] Brinkmann A, Baumann N, Bizer C. Using LLMs for the Extraction and Normalization of Product Attribute Values[EB/OL]. arXiv:2403.02130, 2024.
+
+[16] Chen T, Guestrin C. XGBoost: A Scalable Tree Boosting System[C]//Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. New York: ACM, 2016: 785-794.
+
+[17] Koenker R, Bassett G Jr. Regression Quantiles[J]. Econometrica, 1978, 46(1): 33-50.
+
+[18] Koenker R. Quantile Regression[M]. Cambridge: Cambridge University Press, 2005.
+
+[19] Imbens G W, Rubin D B. Causal Inference for Statistics, Social, and Biomedical Sciences: An Introduction[M]. Cambridge: Cambridge University Press, 2015.
+
+[20] Angrist J D, Pischke J S. Mostly Harmless Econometrics: An Empiricist’s Companion[M]. Princeton: Princeton University Press, 2009.
+
+[21] Kohavi R, Longbotham R, Sommerfield D, et al. Controlled Experiments on the Web: Survey and Practical Guide[J]. Data Mining and Knowledge Discovery, 2009, 18: 140-181.
+
+[22] Deng A, Xu Y, Kohavi R, et al. Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data[C]//Proceedings of the Sixth ACM International Conference on Web Search and Data Mining. New York: ACM, 2013: 123-132.
+
+[23] Kohavi R, Tang D, Xu Y. Trustworthy Online Controlled Experiments: A Practical Guide to A/B Testing[M]. Cambridge: Cambridge University Press, 2020.
+
+[24] Larsen N, Stallrich J, Sengupta S, et al. Statistical Challenges in Online Controlled Experiments: A Review of A/B Testing Methodology[EB/OL]. arXiv:2212.11366, 2022.
+
+[25] Kohavi R, Henne R M, Sommerfield D. Practical Guide to Controlled Experiments on the Web: Listen to Your Customers not to the HiPPO[C]//Proceedings of the 13th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. New York: ACM, 2007: 959-967.
+
+[26] Kohavi R, Tang D, Xu Y, et al. Online Controlled Experiments and A/B Testing[M]//Encyclopedia of Machine Learning and Data Science. 2nd ed. New York: Springer, 2023.
+
+### 参考文献补充说明
+
+上述参考文献已尽量按正式开题报告的写法进行统一，覆盖了本文所涉及的四类核心文献：
+
+1. **多模态表征与视觉语言模型基础文献**，用于支撑图像与文本联合建模；
+2. **商品类目识别与属性抽取文献**，用于支撑二级类目识别、类目约束属性抽取与开放属性建模；
+3. **价格区间建议与统计学习文献**，用于支撑挂牌价噪声处理、分位数回归与鲁棒建模；
+4. **在线随机实验与因果推断文献**，用于支撑用户级随机实验设计、ITT 估计、方差缩减与稳健性分析。
+
+后续若学校要求严格采用 GB/T 7714—2015 格式，或要求英文作者名缩写、期刊名斜体、DOI 补充、网络文献访问日期等细则，可在终稿阶段再按学院模板进行一次统一格式化。
